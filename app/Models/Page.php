@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasUniqueSlug;
 use Illuminate\Support\Facades\Auth;
 
 class Page extends Post
 {
+    use HasUniqueSlug;
+
     const PAGE = 'page';
 
     protected $table = 'posts';
@@ -21,8 +24,10 @@ class Page extends Post
         });
 
         static::creating(function (Page $page) {
+            $page->slug = $page->generateUniqueSlug($page->title);
             $page->type = self::PAGE;
-            $page->author = Auth::user()->id;
+            $page->author_id = Auth::user()->id;
+            $page->parent = 0;
         });
     }
 }
