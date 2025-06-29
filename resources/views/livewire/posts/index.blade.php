@@ -16,25 +16,31 @@ new class extends Component {
     #[Url(as: 'q')]
     public $search = '';
 
+    #[Url(as: 'category_name')]
+    public $categoryName = '';
+
     function with() : array {
-        $posts = Post::with('author')->notTrashed();
+        $posts = Post::with('author');
 
         switch ($this->status) {
-            case 'all':
-                $posts = Post::with('author')->notTrashed();
-                break;
             case 'publish':
-                $posts = Post::with('author')->published();
+                $posts = $posts->published();
                 break;
             case 'draft':
-                $posts = Post::with('author')->draft();
+                $posts = $posts->draft();
                 break;
             case 'trash':
-                $posts = Post::with('author')->trashed();
+                $posts = $posts->trashed();
                 break;
             default:
-                $posts = Post::with('author')->notTrashed();
+                $posts = $posts->notTrashed();
                 break;
+        }
+
+        if ($this->categoryName) {
+            $posts = Post::with('author')->whereHas('categories', function ($query) {
+                $query->where('slug', '=', $this->categoryName);
+            });
         }
 
         if ($this->search) {
@@ -42,7 +48,7 @@ new class extends Component {
         }
 
         return [
-            'posts' => $posts->paginate(10),
+            'posts' => $posts->orderBy('updated_at', 'desc')->paginate(10),
             'totalPostsCount' => Post::notTrashed()->count(),
             'trashedPostsCount' => Post::trashed()->count(),
             'publishedPostsCount' => Post::published()->count(),
@@ -72,7 +78,7 @@ new class extends Component {
 }; ?>
 
 <div>
-    <div class="title flex items-center gap-2">
+    <div class="title flex items-center gap-2 mb-4">
         <h1 class="inline-block text-3xl">{{ __('Posts') }}</h1>
         <flux:button href="{{ route('posts.create') }}">{{ __('Add Post') }}</flux:button>
     </div>
@@ -139,7 +145,11 @@ new class extends Component {
                             @endif
                         </td>
                         <td class="py-3 px-3" style="width: 15%;">{{ $post->author->name }}</td>
-                        <td class="py-3 px-3" style="width: 25%;">{{ implode($post->categories->pluck('name')->toArray()) }}</td>
+                        <td class="py-3 px-3" style="width: 25%;">
+                            {!! $post->categories->map(function ($category) {
+                                return '<a href="'.route('posts.index', ['category_name' => $category->slug]).'" class="text-blue-400 hover:underline">'.$category->name.'</a>';
+                            })->implode(', ') !!}
+                        </td>
                         <td class="py-3 px-3" style="width: 14%;">
                             @php
                                 $word = 'Last Modified';
