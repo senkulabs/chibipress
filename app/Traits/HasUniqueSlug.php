@@ -14,7 +14,10 @@ trait HasUniqueSlug
         $slug = Str::slug($title);
         $originalSlug = $slug;
 
-        $counter = 1;
+        // Start from 2 because the original start from 1
+        // E.g
+        // slug: abc => original, abc-2 => duplicate
+        $counter = 2;
 
         while ($this->slugExists($slug, $id)) {
             $slug = $originalSlug . '-' . $counter;
