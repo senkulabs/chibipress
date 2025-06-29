@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('categories', function (Blueprint $table) {
-            if (Schema::hasIndex('categories', 'categories_name_slug_unique')) {
-                $table->dropIndex('categories_name_slug_unique');
+            try {
+                $table->dropUnique(['name', 'slug']);
+            } catch (\Throwable $th) {
+                throw $th;
             }
         });
     }

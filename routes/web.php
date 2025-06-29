@@ -10,11 +10,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::view('dashboard', 'dashboard', [
-    'postsCount' => Post::published()->count(),
-    'categoriesCount' => Category::count(),
-    'pagesCount' => Page::published()->count(),
-])
+Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
