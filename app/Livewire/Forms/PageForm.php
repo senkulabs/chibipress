@@ -34,6 +34,10 @@ class PageForm extends Form
         Page::create(
             $this->only(['title', 'content', 'status'])
         );
+
+        $this->reset();
+
+        $this->page = new Page();
     }
 
     public function update()

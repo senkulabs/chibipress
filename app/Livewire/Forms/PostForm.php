@@ -79,6 +79,10 @@ class PostForm extends Form
             // Sync categories to the post
             $post->categories()->sync($categoryIds);
         }
+
+        $this->reset();
+
+        $this->post = new Post();
     }
 
     public function update()
