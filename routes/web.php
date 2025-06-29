@@ -23,6 +23,9 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('posts', 'posts.index')->name('posts.index');
     Volt::route('posts/create', 'posts.create')->name('posts.create');
     Volt::route('posts/{post}/edit', 'posts.edit')->name('posts.edit');
+
+    Volt::route('categories', 'categories.index')->name('categories.index');
+    Volt::route('categories/{category}/edit', 'categories.edit')->name('categories.edit');
 });
 
 require __DIR__.'/auth.php';
