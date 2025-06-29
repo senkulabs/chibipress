@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Category;
+use App\Models\Page;
+use App\Models\Post;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -7,7 +10,11 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
+Route::view('dashboard', 'dashboard', [
+    'postsCount' => Post::published()->count(),
+    'categoriesCount' => Category::count(),
+    'pagesCount' => Page::published()->count(),
+])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
