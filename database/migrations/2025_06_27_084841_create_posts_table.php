@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('slug');
             $table->longText('content')->nullable();
             $table->text('excerpt')->nullable();
-            $table->string('type')->comment('options: post, media, page');
+            $table->string('type')->comment('options: post, attachment, page');
             $table->string('status', 20)->comment('options: draft, published, trash, inherit');
             $table->unsignedBigInteger('parent')->comment('belongs to posts.id');
             $table->timestamps();

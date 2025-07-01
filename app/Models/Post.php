@@ -59,7 +59,7 @@ class Post extends Model
     public function thumbnail(): HasOneThrough
     {
         return $this->hasOneThrough(
-            Media::class,
+            Attachment::class,
             PostMeta::class,
             'post_id', // Foreign key on post_metas table
             'id', // Foreign key on posts table
