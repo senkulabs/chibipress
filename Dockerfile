@@ -14,6 +14,9 @@ RUN npm install
 RUN npm run build
 FROM docker.io/dunglas/frankenphp:static-builder-musl-1.7.0 AS builder
 
+# Install php extensions
+RUN install-php-extensions imagick
+
 ENV NO_COMPRESS=1
 
 WORKDIR /go/src/app/dist/app
@@ -31,6 +34,11 @@ WORKDIR /go/src/app/
 RUN EMBED=dist/app/ ./build-static.sh
 
 FROM docker.io/alpine:3.19.1
+
+# Install dependencies to optimize the uploaded media files
+RUN apk add ffmpeg nodejs npm jpegoptim optipng pngquant gifsicle libavif imagemagick ghostscript
+
+RUN npm i -g svgo
 
 ARG build=dev
 
