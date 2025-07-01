@@ -19,8 +19,8 @@ class PostMeta extends Model
         return $this->belongsTo(Post::class);
     }
 
-    public function media(): BelongsTo
+    public function attachment(): BelongsTo
     {
-        return $this->belongsTo(Media::class, 'post_id');
+        return $this->belongsTo(Attachment::class, 'post_id');
     }
 }
