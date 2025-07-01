@@ -36,6 +36,8 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('pages', 'pages.index')->name('pages.index');
     Volt::route('pages/create', 'pages.create')->name('pages.create');
     Volt::route('pages/{page}/edit', 'pages.edit')->name('pages.edit');
+
+    Volt::route('media', 'media.index')->name('media.index');
 });
 
 Route::get('/health/redis', function () {
@@ -67,6 +69,10 @@ Route::get('/health/pgsql', function () {
         Log::error('Connection failed: '. $th->getMessage());
         return "Connection failed: " . $th->getMessage();
     }
+});
+
+Route::get('/media-library', function () {
+    return view('media-library');
 });
 
 require __DIR__.'/auth.php';
