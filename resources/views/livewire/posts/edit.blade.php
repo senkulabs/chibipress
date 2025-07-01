@@ -43,7 +43,7 @@ new class extends Component {
             </flux:field>
             <flux:field class="mb-4">
                 <flux:label for="content">Content</flux:label>
-                <flux:textarea wire:model="form.content" id="content" />
+                <x-editor wire:model="form.content" />
                 @error('form.content')
                     <flux:error name="form.content" message="{{ $message }}" />
                 @enderror
