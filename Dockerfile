@@ -14,9 +14,6 @@ RUN npm install
 RUN npm run build
 FROM docker.io/dunglas/frankenphp:static-builder-musl-1.7.0 AS builder
 
-# Install php extensions
-RUN install-php-extensions imagick
-
 ENV NO_COMPRESS=1
 
 WORKDIR /go/src/app/dist/app
