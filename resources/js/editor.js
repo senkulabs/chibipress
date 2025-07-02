@@ -12,7 +12,7 @@ import ListItem from '@tiptap/extension-list-item';
 import OrderedList from '@tiptap/extension-ordered-list';
 
 document.addEventListener("alpine:init", () => {
-  window.setupEditor = function(content) {
+  window.richEditor = function(content) {
     let editor;
     let isActive = {
         bold: false,
