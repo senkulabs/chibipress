@@ -17,7 +17,7 @@ class PostForm extends Form
     #[Validate('required|min:5')]
     public $title = '';
 
-    #[Validate('required|min:5')]
+    #[Validate]
     public $content = '';
 
     public $excerpt = '';
@@ -53,6 +53,29 @@ class PostForm extends Form
             ];
             $this->featuredImage = $transformedData;
         }
+    }
+
+    protected function rules()
+    {
+        return [
+            'content' => [
+                'required',
+                'min:5',
+                function ($attribute, $value, $fail) {
+                    // Check if content is empty or just empty lists
+                    $textContent = strip_tags($value);
+                    $textContent = trim($textContent);
+
+                    if (empty($textContent)) {
+                        $fail('The content field is required and cannot be empty');
+                    }
+
+                    if (strlen($textContent) < 5) {
+                        $fail('The minimum character of content is 5 characters.');
+                    }
+                }
+            ]
+        ];
     }
 
     public function store()
