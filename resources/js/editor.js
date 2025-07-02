@@ -65,11 +65,17 @@ document.addEventListener("alpine:init", () => {
           },
           onSelectionUpdate({ editor }) {
             _this.updatedAt = Date.now();
+            _this.updateActiveStates();
           }
         });
 
         this.editor = editor;
         this.updateActiveStates();
+
+        editor.view.dom.addEventListener('keydown', (e) => {
+            _this.updateActiveStates();
+            _this.updatedAt = Date.now();
+        })
 
         this.$watch("content", content => {
           // If the new content matches TipTap's then we just skip.
