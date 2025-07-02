@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Post extends Model
 {
@@ -20,6 +21,16 @@ class Post extends Model
     const PUBLISHED = 'publish';
     const TRASH = 'trash';
     protected $guarded = [];
+    protected $casts = [
+        'meta_value' => 'integer'
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'meta_value' => $this->meta_key === '_thumbnail_id' ? 'integer' : 'string',
+        ];
+    }
 
     protected static function booted() : void
     {
@@ -56,17 +67,20 @@ class Post extends Model
     /**
      * Get the thumbnail for regular post
      */
-    public function thumbnail(): HasOneThrough
+    public function thumbnail()
     {
-        return $this->hasOneThrough(
-            Attachment::class,
-            PostMeta::class,
-            'post_id', // Foreign key on post_metas table
-            'id', // Foreign key on posts table
-            'id', // Local key on posts table
-            'meta_value' // Local key on post_metas table
-        )
-        ->where('post_metas.meta_key', '_thumbnail_id');
+        // $this->metas();
+        // $driver = DB::connection()->getDriverName();
+
+        // return $this->hasOneThrough(
+        //     Attachment::class,
+        //     PostMeta::class,
+        //     'post_id', // Foreign key on post_metas table
+        //     'id', // Foreign key on posts table
+        //     'id', // Local key on posts table
+        //     'meta_value' // Local key on post_metas table
+        // )
+        // ->where('post_metas.meta_key', '_thumbnail_id');
     }
 
     /**
@@ -119,7 +133,7 @@ class Post extends Model
      */
     public function getMeta(string $key): ?string
     {
-        return $this->metas()->where('meta_key', $key)->value('meta_key');
+        return $this->metas()->where('meta_key', $key)->value('meta_value');
     }
 
     /**

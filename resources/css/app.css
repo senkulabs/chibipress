@@ -65,5 +65,4 @@ select:focus[data-flux-control] {
     @apply size-4;
 } */
 
-@import './tiptap.css';
-@import './media.css';
+@import './editor.css';

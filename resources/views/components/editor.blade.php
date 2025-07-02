@@ -1,6 +1,6 @@
 <div>
     <div class="border rounded-lg"
-        x-data="setupEditor(@entangle($attributes['wire:model']).live)" x-init="() => init($refs.editor)" wire:ignore
+        x-data="richEditor(@entangle($attributes['wire:model']).live)" x-init="() => init($refs.editor)" wire:ignore
         {{ $attributes->whereDoesntStartWith('wire:model') }}>
         <div class="toolbar flex space-x-2 border-b p-2">
             <button type="button"

@@ -12,7 +12,7 @@ import ListItem from '@tiptap/extension-list-item';
 import OrderedList from '@tiptap/extension-ordered-list';
 
 document.addEventListener("alpine:init", () => {
-  window.setupEditor = function(content) {
+  window.richEditor = function(content) {
     let editor;
     let isActive = {
         bold: false,
@@ -65,11 +65,17 @@ document.addEventListener("alpine:init", () => {
           },
           onSelectionUpdate({ editor }) {
             _this.updatedAt = Date.now();
+            _this.updateActiveStates();
           }
         });
 
         this.editor = editor;
         this.updateActiveStates();
+
+        editor.view.dom.addEventListener('keydown', (e) => {
+            _this.updateActiveStates();
+            _this.updatedAt = Date.now();
+        })
 
         this.$watch("content", content => {
           // If the new content matches TipTap's then we just skip.
