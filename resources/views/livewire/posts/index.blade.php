@@ -127,9 +127,9 @@ new class extends Component {
                         <th class="py-3 px-3 text-left">Date</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y">
                     @foreach ($posts as $post)
-                    <tr wire:key="{{ $post->id }}" class="divide-y">
+                    <tr wire:key="{{ $post->id }}">
                         <td class="py-3 px-3">
                             {{ $post->title }} {{ ($post->status == 'draft' ? '- Draft' : '') }}
                             @if($post->status == 'trash')
@@ -164,7 +164,7 @@ new class extends Component {
                 </tbody>
             </table>
         </div>
-        <div class="table-pagination">
+        <div class="table-pagination border-t">
             {{ $posts->links() }}
         </div>
     </div>

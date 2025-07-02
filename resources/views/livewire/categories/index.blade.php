@@ -91,9 +91,9 @@ new class extends Component {
                             <th class="py-3 px-3 text-left">Count</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y">
                         @foreach ($categories as $category)
-                        <tr wire:key="{{ $category->id }}" class="divide-y">
+                        <tr wire:key="{{ $category->id }}">
                             <td class="py-3 px-3">
                                 {{ $category->name }}
                                 <div>
@@ -110,7 +110,7 @@ new class extends Component {
                     </tbody>
                 </table>
             </div>
-            <div class="table-pagination">
+            <div class="table-pagination border-t">
                 {{ $categories->links() }}
             </div>
         </div>
