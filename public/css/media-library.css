@@ -306,3 +306,104 @@
         width: 100%;
     }
 }
+
+/* Selection Mode Styles */
+.media-item.selection-mode {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.media-item.selection-mode:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.media-item.chosen {
+    border: 3px solid #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.selection-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.selection-footer {
+    border-top: 1px solid #eee;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+}
+
+.selection-info {
+    color: #666;
+    font-size: 14px;
+}
+
+.selection-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.selection-actions .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.selection-actions .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.selection-actions .btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.selection-actions .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+/* Hide sidebar in selection mode */
+.media-library[x-data] .media-sidebar {
+    display: none;
+}
+
+/* Adjust grid width when sidebar is hidden */
+.media-library .media-grid-container {
+    width: 100%;
+}
+
+/* Media preview positioning for selection indicator */
+.media-preview {
+    position: relative;
+}
+
+/* Filter files that aren't allowed in selection mode */
+.media-item.not-allowed {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.media-item.not-allowed:hover {
+    transform: none;
+    box-shadow: none;
+}

@@ -15,8 +15,18 @@ new class extends Component {
 
     public $files = [];
 
-    public function mount()
+    // New properties for selection mode
+    public $selectionMode = false;
+    public $selectedFileId = null;
+    public $allowedTypes = ['image']; // Default to images only for featured images
+    public $maxSelections = 1; // For featured image, typically 1
+
+    public function mount($selectionMode = false, $selectedFileId = null, $allowedTypes = ['image'], $maxSelections = 1)
     {
+        $this->selectionMode = $selectionMode;
+        $this->selectedFileId = $selectedFileId;
+        $this->allowedTypes = $allowedTypes;
+        $this->maxSelections = $maxSelections;
         $this->loadFiles();
     }
 
@@ -65,6 +75,31 @@ new class extends Component {
             Log::error('Upload failed: ' . $th->getMessage());
         } finally {
 
+        }
+    }
+
+    // New method for selecting files in selection mode
+    public function selectFileForParent($fileId)
+    {
+        if (!$this->selectionMode) {
+            return;
+        }
+
+        $this->selectedFileId = $fileId;
+
+        // Dispatch event to parent component
+        $selectedFile = collect($this->files)->firstWhere('id', $fileId);
+        Log::info('selected file', ['selectedFile' => $selectedFile]);
+        $this->dispatch('fileSelected', $selectedFile);
+    }
+
+    // Method to confirm selection and close modal
+    public function confirmSelection()
+    {
+        if ($this->selectedFileId) {
+            $selectedFile = collect($this->files)->firstWhere('id', $this->selectedFileId);
+            Log::info('dispatch file confirmed', ['selected file' => $selectedFile]);
+            $this->dispatch('fileConfirmed', $selectedFile);
         }
     }
 
@@ -119,12 +154,22 @@ new class extends Component {
             <div class="media-grid" :class="viewMode + '-view'">
                 <template x-for="file in filteredFiles" :key="file.id">
                     <div class="media-item"
-                        :class="[viewMode + '-view', { 'selected': selectedFile && selectedFile.id === file.id }]"
-                        @click="selectFile(file)">
+                        :class="[
+                            viewMode + '-view',
+                            { 'selected': selectedFile && selectedFile.id === file.id },
+                            { 'selection-mode': selectionMode },
+                            { 'chosen': selectionMode && selectedFile == file.id }
+                        ]"
+                        @click="selectionMode ? selectForParent(file) : selectFile(file)">
 
                         <div class="media-preview" :class="{ 'file-icon': !isImage(file.type) }">
                             <img x-show="isImage(file.type)" :src="file.url" :alt="file.name" loading="lazy">
                             <span x-show="!isImage(file.type)" x-text="getFileIcon(file.type)"></span>
+
+                            <!-- Selection indicator for selection mode -->
+                            <div x-show="selectionMode && selectedFileId == file.id" class="selection-indicator">
+                                ✓
+                            </div>
                         </div>
 
                         <div class="media-info">
@@ -145,7 +190,7 @@ new class extends Component {
         </div>
 
         <!-- Sidebar -->
-        <div class="media-sidebar" x-show="selectedFile">
+        <div class="media-sidebar" x-show="selectedFile && !selectionMode">
             <template x-if="selectedFile">
                 <div>
                     <h3 class="sidebar-title">File Details</h3>
@@ -186,12 +231,27 @@ new class extends Component {
             </template>
         </div>
     </div>
+
+    <div x-show="selectionMode" class="selection-footer">
+        <div class="selection-info">
+            <span x-show="selectedFileId">Selected file ready</span>
+            <span x-show="!selectedFileId">Select a file to continue</span>
+        </div>
+        <div class="selection-actions">
+            <button class="btn btn-secondary" @click="$dispatch('media-library-cancelled')">
+                Cancel
+            </button>
+            <button class="btn btn-primary" :disabled="!selectedFileId" @click="confirmSelection()">
+                Use Selected File
+            </button>
+        </div>
+    </div>
 </div>
 
 @assets
-<link rel="stylesheet" href="css/media-library.css">
-<link rel="stylesheet" href="css/notyf.min.css">
-<script src="js/notyf.min.js"></script>
+<link rel="stylesheet" href="/css/media-library.css">
+<link rel="stylesheet" href="/css/notyf.min.css">
+<script src="/js/notyf.min.js"></script>
 @endassets
 
 @script
@@ -207,7 +267,9 @@ new class extends Component {
             searchTerm: '',
             filterType: 'all',
             dragOver: false,
-            nextId: 4,
+            selectionMode: $wire.entangle('selectionMode'),
+            selectedFileId: $wire.entangle('selectedFileId'),
+            allowedTypes: $wire.entangle('allowedTypes'),
 
             init() {
                 this.filteredFiles = this.files;
@@ -239,7 +301,25 @@ new class extends Component {
             },
 
             selectFile(file) {
+                if (this.selectionMode) return;
                 this.selectedFile = this.selectedFile?.id === file.id ? null : file;
+            },
+
+            selectForParent(file) {
+                if (!this.selectionMode) return;
+
+                // Check if file type is allowed
+                if (!this.isFileTypeAllowed(file.type)) {
+                    (new Notyf()).error('This file type is not allowed for selection');
+                    return;
+                }
+
+                this.selectFileId = file.id;
+                $wire.selectFileForParent(file.id);
+            },
+
+            confirmSelection() {
+                $wire.confirmSelection();
             },
 
             deleteFile(fileId) {
@@ -248,12 +328,20 @@ new class extends Component {
                     if (this.selectedFile?.id === fileId) {
                         this.selectedFile = null;
                     }
+                    if (this.selectedFileId === fileId) {
+                        this.selectedFileId = null;
+                    }
                     this.filterFiles();
                 }
             },
 
             filterFiles() {
                 let filtered = this.files;
+
+                // In selection mode, filter by allowed types
+                if (this.selectionMode && this.allowedTypes.length > 0) {
+                    filtered = filtered.filter(file => this.isFileTypeAllowed(file.type));
+                }
 
                 // Filter by type
                 if (this.filterType !== 'all') {
@@ -287,6 +375,25 @@ new class extends Component {
                 this.filteredFiles = filtered;
             },
 
+            isFileTypeAllowed(type) {
+                if (!this.selectionMode || this.allowedTypes.length === 0) return true;
+
+                return this.allowedTypes.some(allowedType => {
+                    switch (allowedType) {
+                        case 'image':
+                            return type.startsWith('image/');
+                        case 'video':
+                            return type.startsWith('video/');
+                        case 'audio':
+                            return type.startsWith('audio/');
+                        case 'document':
+                            return type.includes('pdf') || type.includes('doc') || type.includes('text');
+                        default:
+                            return false;
+                    }
+                });
+            },
+
             isImage(type) {
                 return type && type.startsWith('image/');
             },
@@ -309,7 +416,6 @@ new class extends Component {
             },
 
             formatDate(date) {
-                // console.log(new Date(date));
                 return (new Date(date)).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
