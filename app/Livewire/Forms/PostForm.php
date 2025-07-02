@@ -2,12 +2,13 @@
 
 namespace App\Livewire\Forms;
 
+use App\Models\Attachment;
 use App\Models\Category;
-use App\Models\Media;
 use App\Models\Post;
-use Illuminate\Support\Facades\Storage;
+use DateTime;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class PostForm extends Form
 {
@@ -21,15 +22,14 @@ class PostForm extends Form
 
     public $excerpt = '';
 
-    #[Validate('nullable', 'image', 'extensions:jpg,jpeg,png')]
-    public $featured_image;
+    public $featuredImage = null;
 
     public $categories = [];
 
     #[Validate('required')]
     public $status = 'draft';
 
-    public $existing_featured_image;
+    public $existingFeaturedImage;
 
     public function setPost(Post $post)
     {
@@ -40,7 +40,18 @@ class PostForm extends Form
         $this->status = $post->status;
         $this->categories = $post->categories->pluck('slug')->toArray();
         if ($post->hasThumbnail()) {
-            $this->existing_featured_image = $post->thumbnail->media_path;
+            $attachment = Attachment::find($post->getMeta('_thumbnail_id'));
+            $mediaData = $attachment->mediaFile()->toArray();
+            $transformedData = [
+                'id' => $mediaData['id'],
+                'name' => $mediaData['name'],
+                'type' => $mediaData['mime_type'],
+                'size' => $mediaData['size'],
+                'url' => $attachment->mediaFile()->getUrl(),
+                'uploaded' => (new DateTime($mediaData['created_at']))->format('c'),
+                'dimensions' => null,
+            ];
+            $this->featuredImage = $transformedData;
         }
     }
 
@@ -52,20 +63,9 @@ class PostForm extends Form
             $this->only(['title', 'content', 'excerpt', 'status'])
         );
 
-        if (!is_null($this->featured_image)) {
-            $featured_image_path = $this->featured_image->storePublicly(path: 'media', options: 'public');
-
-            $media = Media::create([
-                'title' => basename($featured_image_path),
-                'status' => 'inherit', // belongs to the posts,
-                'parent' => $post->id,
-            ]);
-
-            $media->setMediaPath($featured_image_path);
-            $media->setMediaMimeType(mime_content_type(Storage::disk('public')->path($featured_image_path)));
-
-            // Associate the post with the featured image
-            $post->setThumbnail($media->id);
+        if (!is_null($this->featuredImage)) {
+            $media = Media::find($this->featuredImage['id']);
+            $post->setThumbnail($media->model_id);
         }
 
         if (!empty($this->categories)) {
@@ -90,25 +90,18 @@ class PostForm extends Form
             $this->only(['title', 'content', 'excerpt', 'status'])
         );
 
-        if (!is_null($this->featured_image)) {
-            // Remove existing media that attached into post
-            $previousMedia = Media::find($this->post->thumbnail->id);
-            $previousMedia->parent = 0;
-            $previousMedia->save();
+        if (!is_null($this->featuredImage)) {
+            $media = Media::find($this->featuredImage['id']);
+            $this->post->setThumbnail($media->model_id);
+        }
 
-            $featured_image_path = $this->featured_image->storePublicly(path: 'media', options: 'public');
+        if (!empty($this->categories)) {
+            $categoryIds = Category::whereIn('slug', $this->categories)
+                ->pluck('id')
+                ->toArray();
 
-            $media = Media::create([
-                'title' => basename($featured_image_path),
-                'status' => 'inherit', // belongs to the posts,
-                'parent' => $this->post->id,
-            ]);
-
-            $media->setMediaPath($featured_image_path);
-            $media->setMediaMimeType(mime_content_type(Storage::disk('public')->path($featured_image_path)));
-
-            // Associate the post with the featured image
-            $this->post->setThumbnail($media->id);
+            // Sync categories to the post
+            $this->post->categories()->sync($categoryIds);
         }
     }
 }
