@@ -286,10 +286,6 @@
     font-size: 16px;
 }
 
-.hidden {
-    display: none;
-}
-
 @media (max-width: 768px) {
     .media-content {
         flex-direction: column;

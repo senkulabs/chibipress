@@ -21,7 +21,23 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
-            CategorySeeder::class
+            CategorySeeder::class,
+            RolesAndPermissionsSeeder::class,
         ]);
+
+        User::factory()->create([
+            'name' => 'Admin',
+            'email' => 'admin@cms.test',
+        ])->assignRole('admin');
+
+        User::factory()->create([
+            'name' => 'Editor',
+            'email' => 'editor@cms.test',
+        ])->assignRole('editor');
+
+        User::factory()->create([
+            'name' => 'Author',
+            'email' => 'author@cms.test',
+        ])->assignRole('author');
     }
 }
