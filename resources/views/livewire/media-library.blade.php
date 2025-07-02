@@ -71,8 +71,8 @@ new class extends Component {
     public function messages()
     {
         return [
-            'files.*.image' => 'Each file must be an image.',
-            'files.*.max' => 'Each file must be smaller than 1MB.',
+            'uploadFiles.*.image' => 'Each file must be an image.',
+            'uploadFiles.*.max' => 'Each file must be smaller than 1MB.',
         ];
     }
 }; ?>
