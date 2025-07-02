@@ -55,7 +55,7 @@ new class extends Component {
 
                 $attachment
                     ->addMedia(Storage::disk('public')->path($uploadedPath))
-                    ->toMediaCollection('files');
+                    ->toMediaCollection('file');
             }
         } catch (\Throwable $th) {
             Log::error('Upload failed: ' . $th->getMessage());
@@ -74,14 +74,7 @@ new class extends Component {
 }; ?>
 
 <div>
-    <div class="media-library" x-data="mediaLibrary()"
-        x-on:livewire-upload-start="uploading = true"
-        x-on:livewire-upload-finish="uploading = false"
-        x-on:livewire-upload-cancel="uploading = false"
-        x-on:livewire-upload-error="uploading = false"
-        x-on:livewire-upload-progress="progress = $event.detail.progress"
-    >
-
+    <div class="media-library" x-data="mediaLibrary()">
         <div class="media-header">
             <!-- Upload Area -->
             <div class="upload-area"
@@ -204,18 +197,323 @@ new class extends Component {
                 </template>
             </div>
         </div>
-
-        @error('files.*')
-            <span class="error">{{ $message }}</span>
-        @enderror
-
-        <div wire:loading wire:target="files">Uploading...</div>
-
-        <div x-show="uploading">
-            <progress max="100" x-bind:value="progress"></progress>
-        </div>
     </div>
 </div>
+
+@assets
+<style>
+.media-library {
+    max-width: 1200px;
+    margin: 0 auto 20px auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.media-header {
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    background: #fff;
+}
+
+.media-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.upload-btn {
+    background: #0073aa;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.upload-btn:hover {
+    background: #005a87;
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 250px;
+}
+
+.view-toggle {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.view-btn {
+    padding: 8px 12px;
+    background: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.view-btn.active {
+    background: #0073aa;
+    color: white;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white;
+}
+
+.media-content {
+    display: flex;
+    min-height: 500px;
+}
+
+.media-grid-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 600px;
+}
+
+.media-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.media-grid.grid-view {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.media-grid.list-view {
+    grid-template-columns: 1fr;
+}
+
+.media-item {
+    border: 2px solid transparent;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f9f9f9;
+    position: relative;
+}
+
+.media-item:hover {
+    border-color: #0073aa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.media-item.selected {
+    border-color: #0073aa;
+    background: #e7f3ff;
+}
+
+.media-item.grid-view {
+    aspect-ratio: 1;
+}
+
+.media-item.list-view {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    min-height: 60px;
+}
+
+.media-preview {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f1;
+    position: relative;
+    overflow: hidden;
+}
+
+.media-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.media-preview.file-icon {
+    font-size: 48px;
+    color: #666;
+}
+
+.list-view .media-preview {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    margin-right: 15px;
+}
+
+.media-info {
+    padding: 10px;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+}
+
+.list-view .media-info {
+    flex: 1;
+    text-align: left;
+    padding: 0;
+}
+
+.media-filename {
+    font-weight: 500;
+    color: #1d2327;
+    margin-bottom: 2px;
+    word-break: break-word;
+}
+
+.media-size {
+    color: #999;
+}
+
+.media-sidebar {
+    width: 300px;
+    background: #f9f9f9;
+    border-left: 1px solid #ddd;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.sidebar-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #1d2327;
+}
+
+.sidebar-preview {
+    width: 100%;
+    height: 200px;
+    background: #f0f0f1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.sidebar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.sidebar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.info-label {
+    font-weight: 500;
+    color: #666;
+}
+
+.info-value {
+    color: #1d2327;
+    text-align: right;
+    max-width: 150px;
+    word-break: break-word;
+}
+
+.delete-btn {
+    background: #d63638;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 15px;
+    width: 100%;
+    transition: background 0.2s;
+}
+
+.delete-btn:hover {
+    background: #b32d2e;
+}
+
+.upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+    border-color: #0073aa;
+    background: #f0f8ff;
+}
+
+.upload-icon {
+    font-size: 48px;
+    color: #ccc;
+    margin-bottom: 10px;
+}
+
+.upload-text {
+    color: #666;
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    .media-content {
+        flex-direction: column;
+    }
+
+    .media-sidebar {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid #ddd;
+    }
+
+    .media-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-input {
+        width: 100%;
+    }
+}
+</style>
+<link rel="stylesheet" href="css/notyf.min.css">
+<script src="js/notyf.min.js"></script>
+@endassets
 
 @script
 <script>
@@ -250,7 +548,7 @@ new class extends Component {
             uploadFiles(files) {
                 $wire.uploadMultiple('uploadFiles', files,
                     (success) => {
-                        console.log(success);
+                        (new Notyf()).success('File successfully uploaded.');
                         files.forEach(file => {
                             const fileObj = {
                                 id: this.nextId++,
@@ -276,9 +574,8 @@ new class extends Component {
 
                         this.filterFiles();
                     },
-                    () => {
-                        // Error callback
-                        console.log('error triggered');
+                    (error) => {
+                        (new Notyf()).error('Cannot upload file. File size is too large.');
                     }
                 );
             },
