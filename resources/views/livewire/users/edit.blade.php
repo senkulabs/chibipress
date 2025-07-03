@@ -9,9 +9,9 @@ new class extends Component {
 
     public UserForm $form;
 
-    public function mount()
+    public function mount(User $user)
     {
-        $this->form->setUser(new User());
+        $this->form->setUser($user);
     }
 
     public function with(): array
@@ -23,15 +23,15 @@ new class extends Component {
 
     function submit()
     {
-        $this->form->store();
+        $this->form->update();
 
         return $this->redirect('/users');
     }
 }; ?>
 
 <div>
-<div class="title flex items-center gap-2">
-        <h1 class="inline-block text-3xl mb-4">{{ __('Add User') }}</h1>
+    <div class="title flex items-center gap-2">
+        <h1 class="inline-block text-3xl mb-4">{{ __('Edit User') }}</h1>
     </div>
     <div class="form flex flex-col">
         <form wire:submit="submit" class="my-6 w-full space-y-6">
@@ -41,13 +41,14 @@ new class extends Component {
                 <flux:input wire:model="form.email" :label="__('Email')" type="email" required autocomplete="email" />
             </div>
 
-            <flux:input
-                wire:model="form.password"
-                :label="__('New password')"
-                type="password"
-                required
-                autocomplete="new-password"
-            />
+            <flux:field>
+                <flux:input
+                    wire:model="form.password"
+                    :label="__('New password')"
+                    type="password"
+                    autocomplete="new-password"
+                />
+            </flux:field>
 
             <flux:field>
                 <flux:select wire:model="form.role" placeholder="Role">

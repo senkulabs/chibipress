@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Validate;
@@ -23,12 +24,14 @@ class UserForm extends Form
         $this->user = $user;
         $this->name = $user->name;
         $this->email = $user->email;
-        $this->password = $user->password;
+        $this->password = '';
         $this->role = $user->roles()->first() ? $user->roles()->first()->name : '';
     }
 
     protected function rules()
     {
+        $isUpdating = $this->user && $this->user->exists();
+
         return [
             'name' => [
                 'required',
@@ -40,7 +43,7 @@ class UserForm extends Form
                 Rule::unique('users')->ignore($this->user)
             ],
             'password' => [
-                'required',
+                $isUpdating ? 'nullable' : 'required',
                 Password::min(8),
             ],
             'role' => [
@@ -60,5 +63,21 @@ class UserForm extends Form
         $this->reset();
 
         $this->user = new User();
+    }
+
+    public function update()
+    {
+        $this->validate();
+
+        $this->user->update(
+            $this->only(['name', 'email'])
+        );
+
+        if ($this->password) {
+            $this->user->password = Hash::make($this->user->password);
+            $this->user->save();
+        }
+
+        $this->user->assignRole($this->role);
     }
 }

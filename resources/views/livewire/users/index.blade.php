@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
@@ -9,6 +8,10 @@ use Livewire\WithPagination;
 
 new class extends Component {
     use WithPagination;
+
+    const USER_ID_ADMIN = '1';
+
+    public $excludedUser = self::USER_ID_ADMIN;
 
     #[Url(as: 'q')]
     public $search = '';
@@ -93,15 +96,17 @@ new class extends Component {
                         <td class="py-3 px-3">
                             {{ $user->name }}
                             <div>
-                                <a href="#" class="text-blue-400 hover:underline">Edit</a> |
-                                <a href="#" wire:click="#" class="text-red-500 hover:underline">Delete</a>
+                                <a href="{{ route('users.edit', $user) }}" class="text-blue-400 hover:underline">Edit</a> |
+                                @if ($user->id != $excludedUser)
+                                <a href="{{ route('users.delete', $user) }}" class="text-red-500 hover:underline">Delete</a>
+                                @endif
                             </div>
                         </td>
                         <td class="py-3 px-3" style="width: 25%;">
                             {{ $user->email }}
                         </td>
                         <td class="py-3 px-3" style="width: 14%;">
-                            {{ ucfirst($user->roles()->first()->name) }}
+                            {{ ucfirst($user->roles->first()->name) }}
                         </td>
                         <td class="py-3 px-3" style="width: 14%;">
                             {{ $user->posts->count() }}
