@@ -1,12 +1,10 @@
 <?php
 
-use App\Models\Category;
-use App\Models\Page;
-use App\Models\Post;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 
 Route::get('/', function () {
@@ -43,6 +41,8 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('users/create', 'users.create')->name('users.create');
     Volt::route('users/{user}/edit', 'users.edit')->name('users.edit');
     Volt::route('users/{user}/delete', 'users.delete')->name('users.delete');
+
+    Volt::route('upload-files', 'upload-files');
 });
 
 Route::get('/health/redis', function () {
@@ -76,8 +76,13 @@ Route::get('/health/pgsql', function () {
     }
 });
 
-Route::get('/media-library', function () {
-    return view('media-library');
+Route::get('/health/s3', function () {
+    try {
+        Storage::disk('s3')->put('file.txt', 'Hello supabase storage. Date: '.now()->format('Y-m-d H:i:s'));
+    } catch (\Throwable $th) {
+        Log::error('warning', ['error' => $th->getMessage(), 'code' => $th->getCode()]);
+        throw $th;
+    }
 });
 
 require __DIR__.'/auth.php';

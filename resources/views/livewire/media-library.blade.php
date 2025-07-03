@@ -4,6 +4,7 @@ use App\Models\Attachment;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Validate;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
@@ -12,6 +13,7 @@ new class extends Component {
 
     #[Validate(['uploadFiles.*' => 'file|max:2048'])]
     public $uploadFiles = [];
+    public $chunkSize = 5_000_000; // 5MB
 
     public $files = [];
 
@@ -50,32 +52,56 @@ new class extends Component {
         $this->files = $files;
     }
 
-    public function updatedUploadFiles()
+    public function updatedUploadFiles($value, $key)
     {
-        try {
-            $this->validate();
+        $keyParts = explode('.', $key);
+        if (count($keyParts) < 2) {
+            return;
+        }
 
-            foreach ($this->uploadFiles as $file) {
-                $filename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION);
-                $filename = $filename . '_' . time() . '.' . $extension;
-                $uploadedPath = $file->storePubliclyAs(path: 'files', options: 'public', name: $filename);
+        list($index, $attribute) = $keyParts;
 
+        if ($attribute == 'fileChunk') {
+            $fileDetails = $this->uploadFiles[intval($index)];
+            Log::info('file details', ['file details' => $fileDetails]);
+            // Final File
+            $fileName  = $fileDetails['fileName'];
+            $finalPath = Storage::path('/livewire-tmp/' . $fileName);
+
+            // Chunk File
+            $chunkName = $fileDetails['fileChunk']->getFileName();
+            $chunkPath = Storage::path('/livewire-tmp/' . $chunkName);
+            $chunk      = fopen($chunkPath, 'rb');
+            $buff       = fread($chunk, $this->chunkSize);
+            fclose($chunk);
+
+            // Merge Together
+            $final = fopen($finalPath, 'ab');
+            fwrite($final, $buff);
+            fclose($final);
+            unlink($chunkPath);
+
+            // Progress
+            $curSize = Storage::size('/livewire-tmp/' . $fileName);
+            Log::info('file size information', ['current' => $curSize, 'file size' => $fileDetails['fileSize']]);
+            // NOTE: Hack way. I always set the progress with 100 as minimum
+            $this->uploadFiles[$index]['progress'] = min(100, $curSize / $fileDetails['fileSize'] * 100);
+            if ($this->uploadFiles[$index]['progress'] == 100) {
+                $this->uploadFiles[$index]['fileRef'] = TemporaryUploadedFile::createFromLivewire('/' . $fileDetails['fileName']);
+                $uploadedPath = $this->uploadFiles[$index]['fileRef']->storePubliclyAs(path: 'files', name: $fileName, options: 'public');
                 $attachment = Attachment::create([
-                    'title' => $filename
+                    'title' => $fileName
                 ]);
 
                 $attachment
                     ->addMedia(Storage::disk('public')->path($uploadedPath))
-                    ->toMediaCollection('file');
+                    ->toMediaCollection('file', 'r2');
+
+                TemporaryUploadedFile::createFromLivewire('/' . $fileDetails['fileName'])->delete();
             }
-
-            $this->loadFiles();
-        } catch (\Throwable $th) {
-            Log::error('Upload failed: ' . $th->getMessage());
-        } finally {
-
         }
+
+        $this->loadFiles();
     }
 
     // New method for selecting files in selection mode
@@ -260,7 +286,8 @@ new class extends Component {
         return {
             uploading: false,
             progress: 0,
-            files: $wire.files,
+            files: $wire.entangle('files').live,
+            chunkStarts: [],
             filteredFiles: [],
             selectedFile: null,
             viewMode: 'grid',
@@ -287,17 +314,35 @@ new class extends Component {
             },
 
             uploadFiles(files) {
-                $wire.uploadMultiple('uploadFiles', files,
-                    (success) => {
-                        (new Notyf()).success('File successfully uploaded.');
-                        this.files = $wire.files;
+                files.forEach((file, index) => {
+                    $wire.set('uploadFiles.' + index + '.fileName', file.name);
+                    $wire.set('uploadFiles.' + index + '.fileSize', file.size);
+                    $wire.set('uploadFiles.' + index + '.progress', 0);
+                    this.chunkStarts[index] = 0;
+                    this.livewireUploadChunk(index, file);
+                })
+            },
 
+            livewireUploadChunk(index, file) {
+                const chunkEnd = Math.min(this.chunkStarts[index] + $wire.chunkSize, file.size);
+                const chunk = file.slice(this.chunkStarts[index], chunkEnd);
+                $wire.upload('uploadFiles.' + index + '.fileChunk', chunk,
+                    () => {
+                        this.files = $wire.files;
                         this.filterFiles();
                     },
-                    (error) => {
-                        (new Notyf()).error('Cannot upload file. File size is too large.');
+                    () => {},
+                    (e) => {
+                    if (e.detail.progress == 100) {
+                        this.chunkStarts[index] = Math.min(this.chunkStarts[index] + $wire.chunkSize, file.size);
+
+                        if (this.chunkStarts[index] < file.size) {
+                            let _time = Math.floor((Math.random() * 2000) + 1);
+                            console.log('sleeping ', _time, 'before next chunk upload');
+                            setTimeout(livewireUploadChunk, _time, index, file);
+                        }
                     }
-                );
+                })
             },
 
             selectFile(file) {
