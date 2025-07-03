@@ -82,25 +82,6 @@ class Post extends Model
     }
 
     /**
-     * Get the thumbnail for regular post
-     */
-    public function thumbnail()
-    {
-        // $this->metas();
-        // $driver = DB::connection()->getDriverName();
-
-        // return $this->hasOneThrough(
-        //     Attachment::class,
-        //     PostMeta::class,
-        //     'post_id', // Foreign key on post_metas table
-        //     'id', // Foreign key on posts table
-        //     'id', // Local key on posts table
-        //     'meta_value' // Local key on post_metas table
-        // )
-        // ->where('post_metas.meta_key', '_thumbnail_id');
-    }
-
-    /**
      * Get thumbnail meta record
      */
     public function thumbnailMeta(): HasOne
