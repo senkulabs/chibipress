@@ -38,6 +38,11 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('pages/{page}/edit', 'pages.edit')->name('pages.edit');
 
     Volt::route('media', 'media.index')->name('media.index');
+
+    Volt::route('users', 'users.index')->name('users.index');
+    Volt::route('users/create', 'users.create')->name('users.create');
+    Volt::route('users/{user}/edit', 'users.edit')->name('users.edit');
+    Volt::route('users/{user}/delete', 'users.delete')->name('users.delete');
 });
 
 Route::get('/health/redis', function () {
