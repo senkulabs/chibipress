@@ -10,12 +10,12 @@ class Page extends Post
 {
     use HasUniqueSlug, Searchable;
 
-    const PAGE = 'page';
+    const TYPE = 'page';
 
     protected $table = 'posts';
 
     protected $attributes = [
-        'type' => self::PAGE
+        'type' => self::TYPE
     ];
 
     /**
@@ -34,13 +34,15 @@ class Page extends Post
     protected static function booted(): void
     {
         static::addGlobalScope('type', function ($query) {
-            $query->where('type', self::PAGE);
+            $query->where('type', self::TYPE);
         });
 
         static::creating(function (Page $page) {
             $page->slug = $page->generateUniqueSlug($page->title);
-            $page->type = self::PAGE;
-            $page->author_id = Auth::user()->id;
+            $page->type = self::TYPE;
+            if (empty($page->author_id)) {
+                $page->author_id = Auth::user()->id;
+            }
             $page->parent = 0;
         });
     }

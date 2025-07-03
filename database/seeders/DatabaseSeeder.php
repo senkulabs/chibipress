@@ -39,5 +39,9 @@ class DatabaseSeeder extends Seeder
             'name' => 'Author',
             'email' => 'author@cms.test',
         ])->assignRole('author');
+
+        $this->call([
+            CMSSeeder::class
+        ]);
     }
 }
