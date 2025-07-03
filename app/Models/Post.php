@@ -12,11 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Laravel\Scout\Searchable;
 
 class Post extends Model
 {
-    use HasUniqueSlug;
-    const POST = 'post';
+    use HasUniqueSlug, Searchable;
+
+    const TYPE = 'post';
     const DRAFT = 'draft';
     const PUBLISHED = 'publish';
     const TRASH = 'trash';
@@ -32,16 +34,31 @@ class Post extends Model
         ];
     }
 
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'title' => $this->title,
+            'content' => $this->content,
+        ];
+    }
+
     protected static function booted() : void
     {
         static::addGlobalScope('type', function ($query) {
-            $query->where('type', self::POST);
+            $query->where('type', self::TYPE);
         });
 
         static::creating(function (Post $post) {
             $post->slug = $post->generateUniqueSlug($post->title);
-            $post->type = self::POST;
-            $post->author_id = Auth::user()->id;
+            $post->type = self::TYPE;
+            if (empty($post->author_id)) {
+                $post->author_id = Auth::user()->id;
+            }
             $post->parent = 0;
         });
     }

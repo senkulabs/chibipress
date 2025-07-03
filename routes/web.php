@@ -1,12 +1,10 @@
 <?php
 
-use App\Models\Category;
-use App\Models\Page;
-use App\Models\Post;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 
 Route::get('/', function () {
@@ -26,23 +24,23 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Volt::route('posts', 'posts.index')->name('posts.index');
-    Volt::route('posts/create', 'posts.create')->name('posts.create');
-    Volt::route('posts/{post}/edit', 'posts.edit')->name('posts.edit');
+    Volt::route('posts', 'posts.index')->name('posts.index')->middleware('permission:manage-posts');
+    Volt::route('posts/create', 'posts.create')->name('posts.create')->middleware('permission:manage-posts');
+    Volt::route('posts/{post}/edit', 'posts.edit')->name('posts.edit')->middleware('permission:manage-posts');
 
-    Volt::route('categories', 'categories.index')->name('categories.index');
-    Volt::route('categories/{category}/edit', 'categories.edit')->name('categories.edit');
+    Volt::route('categories', 'categories.index')->name('categories.index')->middleware('permission:manage-categories');
+    Volt::route('categories/{category}/edit', 'categories.edit')->name('categories.edit')->middleware('permission:manage-categories');
 
-    Volt::route('pages', 'pages.index')->name('pages.index');
-    Volt::route('pages/create', 'pages.create')->name('pages.create');
-    Volt::route('pages/{page}/edit', 'pages.edit')->name('pages.edit');
+    Volt::route('pages', 'pages.index')->name('pages.index')->middleware('permission:manage-pages');
+    Volt::route('pages/create', 'pages.create')->name('pages.create')->middleware('permission:manage-pages');
+    Volt::route('pages/{page}/edit', 'pages.edit')->name('pages.edit')->middleware('permission:manage-pages');
 
-    Volt::route('media', 'media.index')->name('media.index');
+    Volt::route('media', 'media.index')->name('media.index')->middleware('permission:manage-media');
 
-    Volt::route('users', 'users.index')->name('users.index');
-    Volt::route('users/create', 'users.create')->name('users.create');
-    Volt::route('users/{user}/edit', 'users.edit')->name('users.edit');
-    Volt::route('users/{user}/delete', 'users.delete')->name('users.delete');
+    Volt::route('users', 'users.index')->name('users.index')->middleware('permission:manage-users');
+    Volt::route('users/create', 'users.create')->name('users.create')->middleware('permission:manage-users');
+    Volt::route('users/{user}/edit', 'users.edit')->name('users.edit')->middleware('permission:manage-users');
+    Volt::route('users/{user}/delete', 'users.delete')->name('users.delete')->middleware('permission:manage-users');
 });
 
 Route::get('/health/redis', function () {
@@ -76,8 +74,13 @@ Route::get('/health/pgsql', function () {
     }
 });
 
-Route::get('/media-library', function () {
-    return view('media-library');
+Route::get('/health/s3', function () {
+    try {
+        Storage::disk('s3')->put('file.txt', 'Hello supabase storage. Date: '.now()->format('Y-m-d H:i:s'));
+    } catch (\Throwable $th) {
+        Log::error('warning', ['error' => $th->getMessage(), 'code' => $th->getCode()]);
+        throw $th;
+    }
 });
 
 require __DIR__.'/auth.php';

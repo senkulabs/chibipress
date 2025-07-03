@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Post;
-use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
@@ -20,31 +19,38 @@ new class extends Component {
     public $categoryName = '';
 
     function with() : array {
-        $posts = Post::with('author');
+        $posts = Post::search($this->search);
 
         switch ($this->status) {
             case 'publish':
-                $posts = $posts->published();
+                $posts = $posts->query(function ($query) {
+                    return $query->published();
+                });
                 break;
             case 'draft':
-                $posts = $posts->draft();
+                $posts = $posts->query(function ($query) {
+                    return $query->draft();
+                });
                 break;
             case 'trash':
-                $posts = $posts->trashed();
+                $posts = $posts->query(function ($query) {
+                    return $query->trashed();
+                });
                 break;
             default:
-                $posts = $posts->notTrashed();
+                $posts = $posts->query(function ($query) {
+                    return $query->notTrashed();
+                });
                 break;
         }
 
         if ($this->categoryName) {
-            $posts = Post::with('author')->whereHas('categories', function ($query) {
-                $query->where('slug', '=', $this->categoryName);
+            $posts = $posts->query(function ($query) {
+                $query->with('categories')
+                    ->whereHas('categories', function ($categoryQuery) {
+                        $categoryQuery->where('slug', '=', $this->categoryName);
+                    });
             });
-        }
-
-        if ($this->search) {
-            $posts->where('title', 'like', "%{$this->search}%");
         }
 
         return [

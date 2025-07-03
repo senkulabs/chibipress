@@ -19,31 +19,29 @@ new class extends Component {
     public $categoryName = '';
 
     function with() : array {
-        $pages = Page::with('author');
+        $pages = Page::search($this->search);
 
         switch ($this->status) {
             case 'publish':
-                $pages = $pages->published();
+                $pages = $pages->query(function ($query) {
+                    return $query->published();
+                });
                 break;
             case 'draft':
-                $pages = $pages->draft();
+                $pages = $pages->query(function ($query) {
+                    return $query->draft();
+                });
                 break;
             case 'trash':
-                $pages = $pages->trashed();
+                $pages = $pages->query(function ($query) {
+                    return $query->trashed();
+                });
                 break;
             default:
-                $pages = $pages->notTrashed();
+                $pages = $pages->query(function ($query) {
+                    return $query->notTrashed();
+                });
                 break;
-        }
-
-        if ($this->categoryName) {
-            $pages = Page::with('author')->whereHas('categories', function ($query) {
-                $query->where('slug', '=', $this->categoryName);
-            });
-        }
-
-        if ($this->search) {
-            $pages->where('title', 'like', "%{$this->search}%");
         }
 
         return [

@@ -23,11 +23,7 @@ new class extends Component {
 
     function with() : array
     {
-        $categories = Category::query();
-
-        if (!empty($this->search)) {
-            $categories->where('name', 'like', "%{$this->search}%");
-        }
+        $categories = Category::search($this->search);
 
         return [
             'categories' => $categories->paginate(10),
