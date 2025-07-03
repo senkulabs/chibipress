@@ -1,17 +1,8 @@
 FROM docker.io/serversideup/php:8.3-cli AS vendor
 
-WORKDIR /var/www/html
-
-# Copy composer files first for better layer caching
-COPY composer.json composer.lock ./
+COPY --chown=www-data:www-data . /var/www/html
 
 RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs --no-dev
-
-# Copy the rest of the application
-COPY --chown=www-data:www-data . .
-
-# Run post-install scripts now that we have the full application
-RUN composer dump-autoload --optimize
 FROM node:20 AS node_modules
 
 RUN mkdir -p /app
