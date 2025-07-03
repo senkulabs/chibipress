@@ -24,25 +24,23 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Volt::route('posts', 'posts.index')->name('posts.index');
-    Volt::route('posts/create', 'posts.create')->name('posts.create');
-    Volt::route('posts/{post}/edit', 'posts.edit')->name('posts.edit');
+    Volt::route('posts', 'posts.index')->name('posts.index')->middleware('permission:manage-posts');
+    Volt::route('posts/create', 'posts.create')->name('posts.create')->middleware('permission:manage-posts');
+    Volt::route('posts/{post}/edit', 'posts.edit')->name('posts.edit')->middleware('permission:manage-posts');
 
-    Volt::route('categories', 'categories.index')->name('categories.index');
-    Volt::route('categories/{category}/edit', 'categories.edit')->name('categories.edit');
+    Volt::route('categories', 'categories.index')->name('categories.index')->middleware('permission:manage-categories');
+    Volt::route('categories/{category}/edit', 'categories.edit')->name('categories.edit')->middleware('permission:manage-categories');
 
-    Volt::route('pages', 'pages.index')->name('pages.index');
-    Volt::route('pages/create', 'pages.create')->name('pages.create');
-    Volt::route('pages/{page}/edit', 'pages.edit')->name('pages.edit');
+    Volt::route('pages', 'pages.index')->name('pages.index')->middleware('permission:manage-pages');
+    Volt::route('pages/create', 'pages.create')->name('pages.create')->middleware('permission:manage-pages');
+    Volt::route('pages/{page}/edit', 'pages.edit')->name('pages.edit')->middleware('permission:manage-pages');
 
-    Volt::route('media', 'media.index')->name('media.index');
+    Volt::route('media', 'media.index')->name('media.index')->middleware('permission:manage-media');
 
-    Volt::route('users', 'users.index')->name('users.index');
-    Volt::route('users/create', 'users.create')->name('users.create');
-    Volt::route('users/{user}/edit', 'users.edit')->name('users.edit');
-    Volt::route('users/{user}/delete', 'users.delete')->name('users.delete');
-
-    Volt::route('upload-files', 'upload-files');
+    Volt::route('users', 'users.index')->name('users.index')->middleware('permission:manage-users');
+    Volt::route('users/create', 'users.create')->name('users.create')->middleware('permission:manage-users');
+    Volt::route('users/{user}/edit', 'users.edit')->name('users.edit')->middleware('permission:manage-users');
+    Volt::route('users/{user}/delete', 'users.delete')->name('users.delete')->middleware('permission:manage-users');
 });
 
 Route::get('/health/redis', function () {

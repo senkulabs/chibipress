@@ -14,11 +14,21 @@
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Platform')" class="grid">
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                    @can('manage-posts')
                     <flux:navlist.item icon="pencil-square" :href="route('posts.index')" :current="request()->routeIs('posts.*')" wire:navigate>{{ __('Posts') }}</flux:navlist.item>
+                    @endcan
+                    @can('manage-categories')
                     <flux:navlist.item icon="folder" :href="route('categories.index')" :current="request()->routeIs('categories.*')" wire:navigate>{{ __('Categories') }}</flux:navlist.item>
+                    @endcan
+                    @can('manage-pages')
                     <flux:navlist.item icon="document" :href="route('pages.index')" :current="request()->routeIs('pages.*')" wire:navigate>{{ __('Pages') }}</flux:navlist.item>
+                    @endcan
+                    @can('manage-media')
                     <flux:navlist.item icon="swatch" :href="route('media.index')" :current="request()->routeIs('media.*')" wire:navigate>{{ __('Media') }}</flux:navlist.item>
+                    @endcan
+                    @can('manage-users')
                     <flux:navlist.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>{{ __('Users') }}</flux:navlist.item>
+                    @endcan
                 </flux:navlist.group>
             </flux:navlist>
 
