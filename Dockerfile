@@ -1,14 +1,23 @@
 FROM docker.io/serversideup/php:8.3-cli AS vendor
 
-COPY --chown=www-data:www-data . /var/www/html
+WORKDIR /var/www/html
+
+# Copy composer files first for better layer caching
+COPY composer.json composer.lock ./
 
 RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs --no-dev
+
+# Copy the rest of the application
+COPY --chown=www-data:www-data . .
+
+# Run post-install scripts now that we have the full application
+RUN composer dump-autoload --optimize
 FROM node:20 AS node_modules
 
 RUN mkdir -p /app
 WORKDIR /app
 COPY . .
-COPY --from=vendor /var/www/html /app
+COPY --from=vendor /var/www/html/vendor /app
 
 RUN npm install
 RUN npm run build
@@ -22,9 +31,11 @@ COPY . .
 
 # Remove tests folder to save space
 RUN rm -Rf tests/
+RUN rm -Rf archive/
 
-COPY --from=vendor /var/www/html /go/src/app/dist/app
-COPY --from=node_modules /app/public/build /go/src/app/dist/app/public/build
+COPY --from=vendor /var/www/html/vendor vendor
+COPY --from=vendor /var/www/html/composer.lock composer.lock
+COPY --from=node_modules /app/public/build public/build
 
 WORKDIR /go/src/app/
 
@@ -57,6 +68,8 @@ COPY crontab crontab
 
 COPY --from=builder /go/src/app/dist/frankenphp-linux-x86_64 server
 COPY --from=builder /go/src/app/dist/app/entrypoint.sh entrypoint.sh
+COPY --from=builder --chmod=755 /go/src/app/dist/app/supervisord.conf /etc/supervisord.conf
+COPY --from=builder /usr/local/bin/supercronic /usr/local/bin/supercronic
 COPY --from=docker.io/ochinchina/supervisord:latest /usr/local/bin/supervisord /usr/local/bin/supervisord
 
 RUN chmod +x ./entrypoint.sh
