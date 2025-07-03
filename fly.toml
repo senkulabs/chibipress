@@ -23,6 +23,8 @@ console_command = 'php /var/www/html/artisan tinker'
   DB_CONNECTION = 'pgsql'
   QUEUE_CONNECTION = 'redis'
   CACHE_STORE = 'redis'
+  SCOUT_DRIVER = 'database'
+  SCOUT_QUEUE = 'true'
 
 [http_service]
   internal_port = 80

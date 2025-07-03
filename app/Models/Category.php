@@ -5,12 +5,26 @@ namespace App\Models;
 use App\Traits\HasUniqueSlug;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use Laravel\Scout\Searchable;
 
 class Category extends Model
 {
-    use HasUniqueSlug;
+    use HasUniqueSlug, Searchable;
 
     protected $guarded = [];
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'slug' => $this->slug,
+        ];
+    }
 
     protected static function booted(): void
     {

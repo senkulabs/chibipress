@@ -25,7 +25,7 @@ new class extends Component {
         $users = User::query();
 
         if ($this->search) {
-            $users->where('name', 'like', "%{$this->search}%");
+            $users = User::search($this->search);
         }
 
         if ($this->role) {

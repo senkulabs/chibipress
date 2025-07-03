@@ -4,10 +4,11 @@ namespace App\Models;
 
 use App\Traits\HasUniqueSlug;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Scout\Searchable;
 
 class Page extends Post
 {
-    use HasUniqueSlug;
+    use HasUniqueSlug, Searchable;
 
     const PAGE = 'page';
 
@@ -16,6 +17,19 @@ class Page extends Post
     protected $attributes = [
         'type' => self::PAGE
     ];
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'title' => $this->title,
+            'content' => $this->content,
+        ];
+    }
 
     protected static function booted(): void
     {

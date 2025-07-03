@@ -12,10 +12,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Laravel\Scout\Searchable;
 
 class Post extends Model
 {
-    use HasUniqueSlug;
+    use HasUniqueSlug, Searchable;
+
     const POST = 'post';
     const DRAFT = 'draft';
     const PUBLISHED = 'publish';
@@ -29,6 +31,19 @@ class Post extends Model
     {
         return [
             'meta_value' => $this->meta_key === '_thumbnail_id' ? 'integer' : 'string',
+        ];
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'title' => $this->title,
+            'content' => $this->content,
         ];
     }
 
