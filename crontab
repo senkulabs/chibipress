@@ -1,0 +1,1 @@
+* * * * * /app/server php-cli artisan schedule:run >> /dev/null 2>&1
