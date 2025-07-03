@@ -8,7 +8,7 @@ FROM node:20 AS node_modules
 RUN mkdir -p /app
 WORKDIR /app
 COPY . .
-COPY --from=vendor /var/www/html/vendor /app
+COPY --from=vendor /var/www/html /app
 
 RUN npm install
 RUN npm run build
@@ -24,9 +24,8 @@ COPY . .
 RUN rm -Rf tests/
 RUN rm -Rf archive/
 
-COPY --from=vendor /var/www/html/vendor vendor
-COPY --from=vendor /var/www/html/composer.lock composer.lock
-COPY --from=node_modules /app/public/build public/build
+COPY --from=vendor /var/www/html /go/src/app/dist/app
+COPY --from=node_modules /app/public/build /go/src/app/dist/app/public/build
 
 WORKDIR /go/src/app/
 
