@@ -4,10 +4,10 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::call(function () {
-    Artisan::command('migrate:fresh --force');
-    Artisan::command('db:seed --force');
-})->daily();
+Schedule::command('migrate:fresh --seed --force')->daily();
+
+Schedule::command('app:ping-database')->everyTenSeconds();
+Schedule::command('app:ping-redis')->everyTenSeconds();
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
