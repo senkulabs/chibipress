@@ -1,8 +1,6 @@
-# Palm CMS
+# ChibiPress
 
-> Note: This is a technical skill assessment held by Palmcode for Senior Laravel Developer.
-
-Headless CMS with TALL Stack. It covers:
+A tiny (chibi) CMS with TALL stack. It covers:
 
 - Manage Posts
 - Manage Categories
@@ -23,7 +21,7 @@ Email: author@cms.test
 
 All accounts can be accessed with password: `password`.
 
-API documentation provided in URL: `https://palm-cms.fly.dev/docs/api`
+API documentation provided in URL: `https://chibipress.fly.dev/docs/api`
 
 ## Deployment Diagram
 
@@ -79,7 +77,7 @@ graph TB
 - Laravel version 12
 - PHP version 8.3
 - Redis
-- SQLite or Postgresql
+- Postgresql or MySQL. Not Sqlite because it uses the Laravel Scout for full-text search.
 - NodeJS
 - Cloudflare account to create Cloudflare R2 Bucket (S3 compatible)
 
@@ -96,20 +94,25 @@ This project use Laravel version 12 and use PHP version 8.3.
 cp .env.example .env
 ```
 
-3. Run `composer install` and `npm install` to install dependencies
+3. Run `composer install` and `pnpm install` to install dependencies.
 
 ```sh
-composer install
-npm install
+composer install && pnpm install
 ```
 
 4. Adjust environment for database connection, s3, and redis.
 
-5. Run artisan migrate and artisan seeder.
+5. Run command below to generate `APP_KEY`.
+
+```sh
+php artisan key:generate
+```
+
+6. Run artisan migrate and artisan seeder.
 
 ```sh
 php artisan migrate
 php artisan db:seed
 ```
 
-6. Run `composer run dev` command to access project in `http://localhost:8000`
+7. Run `composer run dev` command to access project in `http://localhost:8000`
