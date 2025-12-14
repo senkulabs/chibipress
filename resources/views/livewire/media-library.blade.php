@@ -96,8 +96,9 @@ new class extends Component {
                 ]);
 
                 $attachment
-                    ->addMedia(Storage::disk('public')->path($uploadedPath))
-                    ->toMediaCollection('file', 'r2');
+                    ->addMedia(Storage::path($uploadedPath))
+                    ->toMediaCollection('file')
+                    ->toMediaCollectionOnCloudDisk('file');
 
                 TemporaryUploadedFile::createFromLivewire('/' . $fileDetails['fileName'])->delete();
             }
